@@ -94,4 +94,7 @@
     <string name="sUsername">Username</string>
     <string name="sPassword">Password</string>
     <string name="sLogin">Login</string>
+    <string name="sReg">If you are new you will be prompted to finish registration after this page</string>
+    <string name="title_activity_list_edit">ListEdit</string>
+    <string name="newItem">New Item..</string>
 </resources>

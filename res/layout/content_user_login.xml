@@ -19,8 +19,13 @@
         android:text="@string/sUsername" />
 
     <EditText
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
+        android:singleLine="true"
+        android:lines="1"
+        android:scrollHorizontally="false"
+        android:ellipsize="end"
+        android:paddingLeft="15dp"
         android:id="@+id/iUsername" />
 
     <TextView
@@ -29,8 +34,13 @@
         android:text="@string/sPassword" />
 
     <EditText
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
+        android:singleLine="true"
+        android:lines="1"
+        android:scrollHorizontally="false"
+        android:ellipsize="end"
+        android:paddingLeft="15dp"
         android:id="@+id/iPassword" />
 
     <Button
@@ -38,4 +48,9 @@
         android:layout_height="wrap_content"
         android:text="@string/sLogin"
         android:id="@+id/iLogin" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/sReg" />
 </LinearLayout>

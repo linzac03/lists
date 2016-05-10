@@ -1,5 +1,7 @@
 package me.lists5.lists;
 
+import android.app.AlertDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -14,25 +16,81 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
-public class ListBase extends AppCompatActivity {
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 
-    @Override
+import java.util.ArrayList;
+
+import me.lists5.lists.AppDB;
+
+public class ListBase extends AppCompatActivity implements View.OnClickListener {
+    static AppDB db;
+    static User user;
     protected void onCreate(Bundle savedInstanceState) {
-        String[] testList = {"This", "Is", "A", "Test"};
         super.onCreate(savedInstanceState);
+        Intent thisIntent = getIntent();
+
+        if (thisIntent.getExtras() != null) {
+            user = new User(thisIntent.getExtras().getString("user"));
+        } else {
+            user = new User("I'm a tester");
+        }
+
+        //Do DB tests
+        db = new AppDB(this);
+        String test = "post";
+        ArrayList<String> testList = new ArrayList<String>();
+        JSONArray testJ, testJ2;
+        String testjstring = "{'beans':'got none'}";
+        switch(test) {
+            case "fetch":
+
+                String result = db.testDB(user, new GetUserCallback() {
+                    @Override
+                    public void done(String returnedString) {
+                        if (returnedString == null) {
+                            showError("Null Response");
+                        }
+                    }
+                });
+
+                try {
+                    testJ = new JSONArray(result != null ? result : "");
+                    for (int i = 0; i < testJ.length(); i++) {
+                        JSONObject obj = testJ.getJSONObject(i);
+                        String name = obj.getString("name");
+                        String price = obj.getString("price");
+                        testList.add(name + " \t" + price);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                break;
+            case "post":
+                String result2 = db.testPost(user, new GetUserCallback() {
+                    @Override
+                    public void done(String returnedResponse) {
+                        if (returnedResponse == null) {
+                            showError("Null Response");
+                        }
+                    }
+                });
+
+                try {
+                    if(result2 != null) {
+                        JSONObject obj = new JSONObject(result2);
+                        testList.add(obj.getString("data"));
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                break;
+            default:
+                break;
+        }
         setContentView(R.layout.activity_list_base);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Add New List", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
-
         ListAdapter myAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1,
                 testList);
 
@@ -48,6 +106,43 @@ public class ListBase extends AppCompatActivity {
             }
         });
 
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Snackbar.make(view, "Add New List", Snackbar.LENGTH_LONG)
+                        .setAction("Add", ListBase.this).show();
+            }
+        });
+
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch(v.getId()) {
+            default:
+                if (db.authuser()) {
+                    Intent newAct = new Intent(ListBase.this, ListEdit.class);
+                    //Create the bundle
+                    Bundle bundle = new Bundle();
+
+                    bundle.putString("user", user.toString());
+
+                    newAct.putExtras(bundle);
+
+                    startActivity(newAct);
+                }
+        }
+    }
+
+    private void showError(String str) {
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(ListBase.this);
+        dialogBuilder.setMessage(str);
+        dialogBuilder.setPositiveButton("Ok", null);
+        dialogBuilder.show();
     }
 
     @Override
