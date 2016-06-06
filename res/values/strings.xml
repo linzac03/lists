@@ -95,6 +95,12 @@
     <string name="sPassword">Password</string>
     <string name="sLogin">Login</string>
     <string name="sReg">If you are new you will be prompted to finish registration after this page</string>
-    <string name="title_activity_list_edit">ListEdit</string>
+    <string name="title_activity_list_edit">Edit List</string>
     <string name="newItem">New Item..</string>
+    <string name="title_activity_list_add_item">Add Item</string>
+    <string-array name="item_type_array">
+        <item>Text</item>
+        <item>Bill</item>
+    </string-array>
+
 </resources>

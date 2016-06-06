@@ -16,6 +16,6 @@
         <ListView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:id="@+id/myLists"></ListView>
+            android:id="@+id/myLists"/>
     </LinearLayout>
 </android.support.v4.widget.NestedScrollView>

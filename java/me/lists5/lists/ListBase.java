@@ -1,6 +1,7 @@
 package me.lists5.lists;
 
 import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -11,6 +12,7 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -22,12 +24,14 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import me.lists5.lists.AppDB;
 
 public class ListBase extends AppCompatActivity implements View.OnClickListener {
     static AppDB db;
     static User user;
+    static ArrayList<String> myLists;
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Intent thisIntent = getIntent();
@@ -38,61 +42,40 @@ public class ListBase extends AppCompatActivity implements View.OnClickListener 
             user = new User("I'm a tester");
         }
 
-        //Do DB tests
+
         db = new AppDB(this);
-        String test = "post";
-        ArrayList<String> testList = new ArrayList<String>();
-        JSONArray testJ, testJ2;
-        String testjstring = "{'beans':'got none'}";
-        switch(test) {
-            case "fetch":
+        JSONArray jarr;
+        JSONObject obj;
+        String name;
+        HashMap<String, String> myListsParams = new HashMap<>();
+        myLists = new ArrayList<>();
 
-                String result = db.testDB(user, new GetUserCallback() {
-                    @Override
-                    public void done(String returnedString) {
-                        if (returnedString == null) {
-                            showError("Null Response");
-                        }
-                    }
-                });
-
-                try {
-                    testJ = new JSONArray(result != null ? result : "");
-                    for (int i = 0; i < testJ.length(); i++) {
-                        JSONObject obj = testJ.getJSONObject(i);
-                        String name = obj.getString("name");
-                        String price = obj.getString("price");
-                        testList.add(name + " \t" + price);
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
+        myListsParams.put("query", "getMyLists");
+        String result = db.post(user, new GetUserCallback() {
+            @Override
+            public void done(String returnedString) {
+                if (returnedString == null) {
+                    showError("Null Response");
                 }
-                break;
-            case "post":
-                String result2 = db.testPost(user, new GetUserCallback() {
-                    @Override
-                    public void done(String returnedResponse) {
-                        if (returnedResponse == null) {
-                            showError("Null Response");
-                        }
-                    }
-                });
+            }
+        }, myListsParams);
 
-                try {
-                    if(result2 != null) {
-                        JSONObject obj = new JSONObject(result2);
-                        testList.add(obj.getString("data"));
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
+        try {
+            if (result != null) {
+                jarr = new JSONArray(result);
+                for (int i = 0; i < jarr.length(); i++) {
+                    obj = jarr.getJSONObject(i);
+                    name = obj.getString("name");
+                    myLists.add(name);
                 }
-                break;
-            default:
-                break;
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
+
         setContentView(R.layout.activity_list_base);
         ListAdapter myAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1,
-                testList);
+                myLists);
 
         ListView myListView = (ListView) findViewById(R.id.myLists);
 
@@ -125,15 +108,29 @@ public class ListBase extends AppCompatActivity implements View.OnClickListener 
         switch(v.getId()) {
             default:
                 if (db.authuser()) {
-                    Intent newAct = new Intent(ListBase.this, ListEdit.class);
+                    final Intent newAct = new Intent(ListBase.this, ListEdit.class);
                     //Create the bundle
-                    Bundle bundle = new Bundle();
+                    final Bundle bundle = new Bundle();
 
                     bundle.putString("user", user.toString());
 
-                    newAct.putExtras(bundle);
+                    AlertDialog.Builder alert = new AlertDialog.Builder(this);
+                    final EditText edittext = new EditText(this);
+                    alert.setMessage("Name your list");
+                    alert.setView(edittext);
 
-                    startActivity(newAct);
+                    alert.setPositiveButton("Okay", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int whichButton) {
+                            //What ever you want to do with the value
+                            bundle.putString("name", edittext.getText().toString());
+
+                            newAct.putExtras(bundle);
+
+                            startActivity(newAct);
+                        }
+                    });
+
+                    alert.show();
                 }
         }
     }

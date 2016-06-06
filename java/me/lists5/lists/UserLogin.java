@@ -43,7 +43,7 @@ public class UserLogin extends AppCompatActivity implements View.OnClickListener
                     Bundle bundle = new Bundle();
 
                     bundle.putString("user", iUsername.getText().toString());
-
+                    bundle.putString("action", "post");
                     newAct.putExtras(bundle);
 
                     startActivity(newAct);

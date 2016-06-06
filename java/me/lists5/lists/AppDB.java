@@ -16,7 +16,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.HttpURLConnection;
 import java.util.HashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Created by porko on 2/28/16.
@@ -31,7 +33,6 @@ public class AppDB {
     public AppDB(Context context) {
         superContext = context;
         progressDialog = new ProgressDialog(context);
-        setProgress();
         if (conn != null) {
             conn.disconnect();
         }
@@ -42,15 +43,13 @@ public class AppDB {
     public String testDB(User user, GetUserCallback getUserCallback) {
         HashMap<String, String> myargs = new HashMap<String, String>();
         AppTask at = new AppTask(user, getUserCallback, myargs);
-        //at.get(1000, TimeUnit.MILLISECONDS);
         at.execute();
-        //while (at.resp == null) {}
         return response;
     }
 
     public String testPost(User user, GetUserCallback getUserCallback) {
         HashMap<String, String> myargs = new HashMap<>();
-        myargs.put("data", "this text went from end to end to end");
+        myargs.put("data", "this text went from client to server to client");
         AppTask at = new AppTask(user, getUserCallback, myargs);
         at.execute();
         return response;
@@ -59,9 +58,7 @@ public class AppDB {
     public String get(User user, GetUserCallback getUserCallback, HashMap<String,String> myargs) {
         myargs.put("action", "get");
         AppTask at = new AppTask(user, getUserCallback, myargs);
-        //at.get(1000, TimeUnit.MILLISECONDS);
         at.execute();
-        //while (at.resp == null) {}
         return response;
     }
 
@@ -70,12 +67,6 @@ public class AppDB {
         AppTask at = new AppTask(user, getUserCallback, myargs);
         at.execute();
         return response;
-    }
-
-    public void setProgress() {
-        progressDialog.setCancelable(false);
-        progressDialog.setTitle("Checking Database");
-        progressDialog.setMessage("Please wait...");
     }
 
     public boolean authuser() { return true; }
@@ -92,6 +83,12 @@ public class AppDB {
             this.taskParams = params;
         }
 
+        public void setProgress() {
+            progressDialog.setCancelable(false);
+            progressDialog.setTitle("Checking Database");
+            progressDialog.setMessage("Please wait...");
+        }
+
         public String getResponseMessage() {
             if (resp != null) {
                 return resp;
@@ -100,7 +97,7 @@ public class AppDB {
         }
 
         //get Data from a specific url
-        public void get(HashMap<String, String> params) {
+        public void _get(HashMap<String, String> params) {
             setProgress();
             String urlparams = "/";
             if (!params.isEmpty()) {
@@ -152,20 +149,14 @@ public class AppDB {
         }
 
         //Post to a url
-        public void post(HashMap<String, String> params) {
+        public void _post(HashMap<String, String> params) {
+            setProgress();
             String outparams = "";
-
-            if (!params.isEmpty()) {
-                for (HashMap.Entry<String, String> entry : params.entrySet()) {
-                    outparams += entry.getKey() + "=" + entry.getValue() + "";
-                }
-            }
-
-
             String request = SERVER_ADDR + "/post";
             int status;
             try {
-                conn = null;
+                //set connection properties
+                conn = null; // this is just in case I have a lingering connection
                 URL url = new URL(request);
                 conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
@@ -173,10 +164,16 @@ public class AppDB {
                 conn.setConnectTimeout(15000);
                 conn.setReadTimeout(15000);
 
-                OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-                out.write(outparams);
-                out.close();
+                //start write to outputstream
+                if (!params.isEmpty()) {
+                    OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
+                    for (HashMap.Entry<String, String> entry : params.entrySet()) {
+                        out.write(entry.getKey() + "='" + entry.getValue() + "'&");
+                    }
+                    out.close();
+                }
 
+                //parse response
                 status = conn.getResponseCode();
                 switch (status) {
                     case 200:
@@ -202,17 +199,18 @@ public class AppDB {
             } finally {
                 conn.disconnect();
             }
+            progressDialog.dismiss();
         }
 
         @Override
         protected Void doInBackground(Void... params) {
             //request(taskParams);
-            switch (taskParams.get("action")) {
+            switch (this.taskParams.get("action")) {
                 case "post":
-                    post(taskParams);
+                    _post(taskParams);
                     break;
                 case "get":
-                    get(taskParams);
+                    _get(taskParams);
                     break;
             }
             return null;

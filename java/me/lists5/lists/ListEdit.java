@@ -1,14 +1,17 @@
 package me.lists5.lists;
 
 import android.app.ProgressDialog;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -23,37 +26,62 @@ import java.util.HashMap;
 public class ListEdit extends AppCompatActivity implements View.OnClickListener {
     static AppDB db;
     static User user;
-    static ArrayList<String> newList;
+    static ArrayList<String> newList, newListDisplay;
     EditText newItem;
     static ListView myListView;
     static ListAdapter myAdapter;
     ProgressDialog progressDialog;
     static Intent newAct;
+    static String listName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        newList = new ArrayList<>();
+        if (newList == null) {
+            newList = new ArrayList<>();
+            newListDisplay = new ArrayList<>();
+        }
         db = new AppDB(this);
-        user = new User(getIntent().getExtras().getString("user"));
+        Intent thisIntent = getIntent();
+
+        if (thisIntent.getExtras() != null) {
+            user = new User(thisIntent.getExtras().getString("user"));
+        } else {
+            user = new User("I'm a tester");
+        }
+
+        listName = getIntent().getExtras().getString("name");
+        setTitle(listName);
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_edit);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setOnClickListener(this);
         setSupportActionBar(toolbar);
-        newItem = (EditText) findViewById(R.id.NewItem);
-        Button addBtn = (Button) findViewById(R.id.AddItem);
 
+        Button addBtn = (Button) findViewById(R.id.AddItem);
         addBtn.setOnClickListener(this);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        //String[] testList = {"This", "Is", "A", "Test"};
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(this);
+        String newItem = thisIntent.getExtras().getString("newItem");
+        String newItemDisplay = thisIntent.getExtras().getString("newItemDisplay");
+        if (newItem != null) {
+            newList.add(newItem);
+            newListDisplay.add(newItemDisplay);
+        }
         myAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1,
-                newList);
+                newListDisplay);
 
         myListView = (ListView) findViewById(R.id.myLists);
-
+        if (newList.size() > 0) {
+            ViewGroup.LayoutParams listviewps = myListView.getLayoutParams();
+            View item = myAdapter.getView(0, null, myListView);
+            item.measure(0, 0);
+            listviewps.height = newList.size() * item.getMeasuredHeight();
+            myListView.setLayoutParams(listviewps);
+        }
         myListView.setAdapter(myAdapter);
     }
 
@@ -82,14 +110,23 @@ public class ListEdit extends AppCompatActivity implements View.OnClickListener 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.toolbar:
+            case R.id.fab:
                 newAct = new Intent(ListEdit.this, ListBase.class);
+
                 //Convert newList to HashMap<String,String>
                 HashMap<String,String> newArgs = new HashMap<>();
-                int i = 0;
+                int i = 1;
+                String str = "{";
+                str += "'name':'" + listName + "', 'items':{";
                 for (String item : newList) {
-                    newArgs.put("item" + (i++),item);
+                    str += item + ( i<newList.size() ? "," : "");
                 }
+                str += "}}";
+                newArgs.put("query", "newlist");
+                newArgs.put("data", str);
+
+                newList.clear();
+                newListDisplay.clear();
                 //Post to DB
                 db.post(user, new GetUserCallback() {
                     @Override
@@ -101,14 +138,13 @@ public class ListEdit extends AppCompatActivity implements View.OnClickListener 
                 break;
 
             case R.id.AddItem:
-                if (newItem != null) {
-                //newList.add(newItem.toString());
-                //finish();
-                //startActivity(getIntent());
-                setProgress(this);
-                new EditTask(newItem.getText().toString()).execute();
+                newAct = new Intent(ListEdit.this, ListAddItem.class);
+                final Bundle bundle = new Bundle();
+                bundle.putString("name",listName);
+
+                newAct.putExtras(bundle);
+                startActivity(newAct);
                 break;
-            }
         }
     }
 

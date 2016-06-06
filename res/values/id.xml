@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="textItem" type="id" />
+    <item name="billName" type="id" />
+    <item name="billAmount" type="id" />
+    <item name="billDue" type="id" />
+    <item name="billDueTitle" type="id" />
+    <item name="billInitTitle" type="id" />
+    <item name="billInitMonth" type="id" />
+    <item name="billInitDay" type="id" />
+</resources>

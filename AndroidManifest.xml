@@ -13,7 +13,7 @@
         <activity
             android:name=".ListBase"
             android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".UserLogin"
             android:label="@string/app_name"
@@ -32,6 +32,15 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="me.lists5.lists.ListBase" />
+        </activity>
+        <activity
+            android:name=".ListAddItem"
+            android:label="@string/title_activity_list_add_item"
+            android:parentActivityName=".ListEdit"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="me.lists5.lists.ListEdit" />
         </activity>
     </application>
 
